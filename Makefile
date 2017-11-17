@@ -13,16 +13,16 @@ TESTBINDIR=./testbin
 ifeq (${CXX}, icpc)
   CXX_OPTIONS=-qopenmp -std=c++11
 else
-  CXX_OPTIONS=-fopenmp --std=c++11 -I/usr/include/mpi/
+  CXX_OPTIONS=-fopenmp --std=c++11 -I/usr/include/mpi/ -I/usr/local/include/boost/ -Wno-format
 endif
 
 CXX_OPTIONS+=-I$(INCLUDEDIR) -I$(DIST_PRIMITIVES_PATH)
 
 ifeq (${debug}, 1)
-  CXX_OPTIONS += -O0 -g -D__DEBUG 
+  CXX_OPTIONS += -O0 -g -D__DEBUG
 else
   ifeq (${CXX}, icpc)
-    CXX_OPTIONS += -O3 -ipo 
+    CXX_OPTIONS += -O3 -ipo
   else
     CXX_OPTIONS += -O3 -flto -fwhole-program
   endif
@@ -49,21 +49,21 @@ deps = $(include_headers) $(dist_primitives_headers)
 apps = $(patsubst $(SRCDIR)/%.cpp, $(BINDIR)/%, $(sources))
 
 all: $(apps)
-	
-$(BINDIR)/% : $(SRCDIR)/%.cpp $(deps)  
-	$(MPICXX) -cxx=$(CXX) $(CXX_OPTIONS) -o $@ $< $(LD_OPTIONS)
+
+$(BINDIR)/% : $(SRCDIR)/%.cpp $(deps)
+	$(MPICXX) $(CXX_OPTIONS) -o $@ $< $(LD_OPTIONS)
 
 # --- Test --- #
-test: $(TESTBINDIR)/test 
+test: $(TESTBINDIR)/test
 test_headers = $(wildcard $(TESTDIR)/*.h)
 test_src = $(wildcard $(TESTDIR)/*.cpp)
 test_objects = $(patsubst $(TESTDIR)/%.cpp, $(TESTBINDIR)/%.o, $(test_src))
 
-$(TESTBINDIR)/%.o : $(TESTDIR)/%.cpp $(deps) $(test_headers) 
-	$(MPICXX) -cxx=$(CXX) $(CXX_OPTIONS) -I$(CATCHDIR)/include -c $< -o $@ $(LD_OPTIONS)
+$(TESTBINDIR)/%.o : $(TESTDIR)/%.cpp $(deps) $(test_headers)
+	$(MPICXX)  $(CXX_OPTIONS) -I$(CATCHDIR)/include -c $< -o $@ $(LD_OPTIONS)
 
-$(TESTBINDIR)/test: $(test_objects) 
-	$(MPICXX) -cxx=$(CXX) $(CXX_OPTIONS) -I$(CATCHDIR)/include -o $(TESTBINDIR)/test $(test_objects) $(LD_OPTIONS)
+$(TESTBINDIR)/test: $(test_objects)
+	$(MPICXX)  $(CXX_OPTIONS) -I$(CATCHDIR)/include -o $(TESTBINDIR)/test $(test_objects) $(LD_OPTIONS)
 
 # --- clean --- #
 
