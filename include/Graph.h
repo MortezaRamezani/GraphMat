@@ -69,7 +69,7 @@ class Graph {
     GraphMat::SpMat<GraphMat::DCSCTile<E> > *AT;
     GraphMat::SpVec<GraphMat::DenseSegment<V> > * vertexproperty;
     GraphMat::SpVec<GraphMat::DenseSegment<bool> > * active;
-  
+
   public:
     Graph(): nvertices(0), nnz(0), vertexpropertyowner(true),
              tiles_per_dim(GraphMat::get_global_nrank()),
@@ -78,7 +78,7 @@ class Graph {
     void ReadEdgelist(GraphMat::edgelist_t<E> A_edges);
     void getVertexEdgelist(GraphMat::edgelist_t<V> & myedges);
     void getEdgelist(GraphMat::edgelist_t<E> & myedges);
-    void ReadMTX(const char* filename); 
+    void ReadMTX(const char* filename);
     void ReadGraphMatBin(const char* filename);
     void WriteGraphMatBin(const char* filename);
 
@@ -162,7 +162,7 @@ void Graph<V,E>::ReadGraphMatBin(const char* filename) {
   bi >> A;
   bi >> AT;
   tiles_per_dim = GraphMat::get_global_nrank();
-  if(A->ntiles_x != tiles_per_dim || A->ntiles_y != tiles_per_dim || 
+  if(A->ntiles_x != tiles_per_dim || A->ntiles_y != tiles_per_dim ||
      AT->ntiles_x != tiles_per_dim || AT->ntiles_y != tiles_per_dim)   {
     std::cout << "Error reading file - mismatch in number of MPI ranks used in load vs save graph" << std::endl;
     exit(1);
@@ -172,7 +172,7 @@ void Graph<V,E>::ReadGraphMatBin(const char* filename) {
   if(num_threads != omp_get_max_threads())   {
     std::cout << "Error reading file - mismatch in number of OpenMP threads used in load vs save graph" << std::endl;
     exit(1);
-  } 
+  }
 
   nvertices = A->m;
   vertexproperty = new GraphMat::SpVec<GraphMat::DenseSegment<V> >(A->m, tiles_per_dim, GraphMat::vector_partition_fn);
@@ -185,7 +185,7 @@ void Graph<V,E>::ReadGraphMatBin(const char* filename) {
 
   vertexpropertyowner = true;
   nnz = A->getNNZ();
-  
+
   gettimeofday(&end, 0);
   std::cout << "Finished GraphMat read + construction, time: " << sec(start,end)  << std::endl;
 
@@ -212,10 +212,10 @@ void Graph<V,E>::ReadEdgelist(GraphMat::edgelist_t<E> A_edges) {
 
   struct timeval start, end;
   gettimeofday(&start, 0);
-  
+
   tiles_per_dim = GraphMat::get_global_nrank();
   num_threads = omp_get_max_threads();
-    
+
   #pragma omp parallel for
   for(int i = 0 ; i < A_edges.nnz ; i++)
   {
@@ -238,7 +238,7 @@ void Graph<V,E>::ReadEdgelist(GraphMat::edgelist_t<E> A_edges) {
 
   nvertices = m_;
   vertexpropertyowner = true;
-  
+
   gettimeofday(&end, 0);
   std::cout << "Finished GraphMat read + construction, time: " << sec(start,end)  << std::endl;
 
@@ -248,7 +248,7 @@ void Graph<V,E>::ReadEdgelist(GraphMat::edgelist_t<E> A_edges) {
 template<class V, class E>
 void Graph<V,E>::ReadMTX(const char* filename) {
   GraphMat::edgelist_t<E> A_edges;
-  GraphMat::load_edgelist(filename, &A_edges, true, true, true);// binary format with header and edge weights
+  GraphMat::load_edgelist(filename, &A_edges, false, false, true);// binary format with header and edge weights
 
   if (A_edges.m != A_edges.n) {
     auto maxn = std::max(A_edges.m, A_edges.n);
@@ -260,12 +260,12 @@ void Graph<V,E>::ReadMTX(const char* filename) {
 }
 
 
-template<class V, class E> 
+template<class V, class E>
 void Graph<V,E>::setAllActive() {
   active->setAll(true);
 }
 
-template<class V, class E> 
+template<class V, class E>
 void Graph<V,E>::setAllInactive() {
   active->setAll(false);
   int global_myrank = GraphMat::get_global_myrank();
@@ -279,43 +279,43 @@ void Graph<V,E>::setAllInactive() {
   }
 }
 
-template<class V, class E> 
+template<class V, class E>
 void Graph<V,E>::setActive(int v) {
   int v_new = vertexToNative(v, tiles_per_dim, nvertices);
   active->set(v_new, true);
 }
 
-template<class V, class E> 
+template<class V, class E>
 void Graph<V,E>::setInactive(int v) {
   int v_new = vertexToNative(v, tiles_per_dim, nvertices);
   active->unset(v_new);
 }
-template<class V, class E> 
+template<class V, class E>
 void Graph<V,E>::reset() {
   setAllInactive();
   V v;
   vertexproperty->setAll(v);
 }
 
-template<class V, class E> 
+template<class V, class E>
 void Graph<V,E>::shareVertexProperty(Graph<V,E>& g) {
   if (vertexproperty != nullptr) delete vertexproperty;
   vertexproperty = g.vertexproperty;
   vertexpropertyowner = false;
 }
 
-template<class V, class E> 
+template<class V, class E>
 void Graph<V,E>::setAllVertexproperty(const V& val) {
   vertexproperty->setAll(val);
 }
 
-template<class V, class E> 
+template<class V, class E>
 void Graph<V,E>::setVertexproperty(int v, const V& val) {
   int v_new = vertexToNative(v, tiles_per_dim, nvertices);
   vertexproperty->set(v_new, val);
 }
 
-template<class V, class E> 
+template<class V, class E>
 void Graph<V,E>::getVertexEdgelist(GraphMat::edgelist_t<V> & myedges) {
   vertexproperty->get_edges(&myedges);
   for(unsigned int i = 0 ; i < myedges.nnz ; i++)
@@ -324,7 +324,7 @@ void Graph<V,E>::getVertexEdgelist(GraphMat::edgelist_t<V> & myedges) {
   }
 }
 
-template<class V, class E> 
+template<class V, class E>
 void Graph<V,E>::getEdgelist(GraphMat::edgelist_t<E> & myedges) {
   A->get_edges(&myedges);
   for(unsigned int i = 0 ; i < myedges.nnz ; i++)
@@ -334,7 +334,7 @@ void Graph<V,E>::getEdgelist(GraphMat::edgelist_t<E> & myedges) {
   }
 }
 
-template<class V, class E> 
+template<class V, class E>
 void Graph<V,E>::saveVertexproperty(std::string fname, bool includeHeader) const {
   GraphMat::edgelist_t<V> myedges;
   vertexproperty->get_edges(&myedges);
@@ -355,7 +355,7 @@ bool Graph<V,E>::vertexNodeOwner(const int v) const {
   return vertexproperty->node_owner(v_new);
 }
 
-template<class V, class E> 
+template<class V, class E>
 V Graph<V,E>::getVertexproperty(const int v) const {
   V vp ;
   int v_new = vertexToNative(v, tiles_per_dim, nvertices);
@@ -363,19 +363,19 @@ V Graph<V,E>::getVertexproperty(const int v) const {
   return vp;
 }
 
-template<class V, class E> 
+template<class V, class E>
 int Graph<V,E>::getNumberOfVertices() const {
   return nvertices;
 }
 
-template<class V, class E> 
+template<class V, class E>
 void Graph<V,E>::applyToAllVertices( void (*ApplyFn)(const V&, V*, void*), void* param) {
   GraphMat::Apply(vertexproperty, vertexproperty, ApplyFn, param);
 }
 
 
-template<class V, class E> 
-template<class T> 
+template<class V, class E>
+template<class T>
 void Graph<V,E>::applyReduceAllVertices(T* val, void (*ApplyFn)(V*, T*, void*), void (*ReduceFn)(const T&, const T&,T*,void*), void* param) {
   GraphMat::MapReduce(vertexproperty, val, ApplyFn, ReduceFn, param);
 }
@@ -386,7 +386,7 @@ struct func_with_param {
   void* param;
 };
 
-template<class V, class E> 
+template<class V, class E>
 void Graph<V,E>::applyToAllEdges(void (*ApplyFn)(E* edge, const V& src, const V& dst, void*), void* param) {
   GraphMat::ApplyEdges(AT, vertexproperty, ApplyFn, param);
 
@@ -401,7 +401,7 @@ void Graph<V,E>::applyToAllEdges(void (*ApplyFn)(E* edge, const V& src, const V&
   GraphMat::ApplyEdges(A, vertexproperty, ApplyFn2, (void*)(&s) );
 }
 
-template<class V, class E> 
+template<class V, class E>
 Graph<V,E>::~Graph() {
   if (A != nullptr) {
 	delete A;
