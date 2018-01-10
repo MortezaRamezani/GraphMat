@@ -13,7 +13,7 @@ TESTBINDIR=./testbin
 ifeq (${CXX}, icpc)
   CXX_OPTIONS=-qopenmp -std=c++11
 else
-  CXX_OPTIONS=-fopenmp --std=c++11 -I/usr/include/mpi/ -I/usr/local/include/boost/ -Wno-format
+  CXX_OPTIONS=-static -fopenmp --std=c++11 -I/usr/include/mpi/ -I/usr/local/include/boost/ -Wno-format
 endif
 
 CXX_OPTIONS+=-I$(INCLUDEDIR) -I$(DIST_PRIMITIVES_PATH)
